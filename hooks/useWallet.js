@@ -12,7 +12,7 @@ import {
   exportPrivateKey,
   importFromPrivateKey,
   getAddress,
-} from "../wallet";
+} from "@/lib/wallet";
 import {
   getUSDCBalance,
   getSOLBalance,
@@ -20,7 +20,7 @@ import {
   getTransactionHistory,
   requestDevnetAirdrop,
   isValidAddress,
-} from "../solana";
+} from "@/lib/solana";
 
 export function useWallet() {
   const [keypair, setKeypair] = useState(null);
