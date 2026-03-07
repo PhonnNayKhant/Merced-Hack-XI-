@@ -9,14 +9,16 @@ import {
     clusterApiUrl,
     LAMPORTS_PER_SOL,
   } from "@solana/web3.js";
-  import {
+  import * as splToken from "@solana/spl-token";
+  
+  const {
     getAssociatedTokenAddress,
     createAssociatedTokenAccountInstruction,
     createTransferInstruction,
     getAccount,
     TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID,
-  } from "@solana/spl-token";
+  } = splToken;
   
   // ----------------------------------------------------------------
   // CONFIG
@@ -24,7 +26,7 @@ import {
   
   // Devnet USDC mint address (use this for testing)
   const USDC_MINT_DEVNET = new PublicKey(
-    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+    "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
   );
   
   // Mainnet USDC mint (swap when going live)
