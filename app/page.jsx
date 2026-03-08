@@ -209,6 +209,7 @@ export default function MinimalDashboard() {
             <p className="text-sm text-gray-500">{t("tagline")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageSelector walletAddress={address} />
             <button onClick={refreshBalances} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
               <RefreshCw size={18} className={loading && address ? "animate-spin" : ""} />
             </button>
