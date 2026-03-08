@@ -42,6 +42,22 @@ export function useWallet() {
   // ── Fetch balances when address is ready ─────────────────────
   useEffect(() => {
     if (!address) return;
+
+    // 1. Register/fetch user profile (fire-and-forget, no UI impact)
+    fetch(`/api/user?address=${address}`).catch(() => {});
+
+    // 2. Load cached transactions from MongoDB immediately so the list
+    //    isn't empty while we wait for the Solana RPC to respond
+    fetch(`/api/transactions?address=${address}`)
+      .then((r) => r.json())
+      .then((cached) => {
+        if (Array.isArray(cached) && cached.length > 0) {
+          setTransactions(cached);
+        }
+      })
+      .catch(() => {});
+
+    // 3. Then fetch fresh data from RPC
     refreshBalances();
   }, [address]);
 
@@ -59,6 +75,15 @@ export function useWallet() {
       setUsdcBalance(usdc);
       setSolBalance(sol);
       setTransactions(txs);
+
+      // Write fresh txs into MongoDB cache (fire-and-forget)
+      if (txs.length > 0) {
+        fetch("/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, transactions: txs }),
+        }).catch(() => {});
+      }
     } catch (e) {
       setError("Failed to load wallet data. Check your connection.");
       console.error(e);
