@@ -1,46 +1,79 @@
-# 🛡️ SolShield 
+# 🛡️ SolShield
 
-**SolShield** is a minimalistic, non-custodial **Solana Web Wallet** built for the UC Merced Hackathon. It is extremely focused on handling **USDC transactions** flawlessly on the Solana Devnet.
+**SolShield** is a minimalistic, secure, non-custodial **Solana Web Wallet** focused entirely on seamless **USDC** transactions. Built with Next.js, it offers a fast and premium user experience out of the box, tailored for users interacting with digital dollars on the Solana blockchain.
 
-It was originally built as a Vite SPA and recently migrated to a Next.js (App Router) structure to better support backend API route generation (for gasless transactions and Solana Actions) as well as full-stack extensibility.
+Currently configured for the **Solana Devnet**, it serves as a lightweight financial application showcasing easy onboarding, intuitive UX, and robust blockchain interactions without overwhelming users with complex crypto terminology.
 
-## 🚀 Features
+---
 
-* **Instant Wallet Generation**: Automatically generates and securely stores a Solana Keypair in the browser's `localStorage` on first load.
-* **Auto-ATA Creation**: Uses `@solana/spl-token` to verify if a recipient already holds a USDC token account. If not, it gracefully creates an Associated Token Account (ATA) for them on the fly before executing the transfer.
-* **Live Network Interaction**: Integrates with `@solana/web3.js` to fetch current SOL and Devnet USDC balances instantly.
-* **Smart UI**: Validates Solana addresses in the input field, ensures sufficient USDC balance before allowing a transfer, and generates a dynamic QR Code representation of your public key.
-* **Built-in Faucet**: Includes an easy one-click Devnet SOL airdrop button to instantly fund your wallet with gas money.
+## ✨ Features
+
+- **Automatic Wallet Generation**: Instantly generates a Solana Keypair for new users upon first visit. No complex seed phrase onboarding required to get started (key securely stored locally).
+- **USDC-First UX**: Prioritizes USDC (Digital Dollars) for sending and receiving, streamlining the experience for real-world fiat equivalency rather than volatile crypto assets.
+- **Smart Transfers (ATA Creation)**: Automatically checks and creates Associated Token Accounts (ATA) for recipients if they don't have one, preventing common transaction failures when sending tokens to new addresses.
+- **Beautiful, Premium Dashboard**: A clean, responsive UI built with Tailwind CSS and Lucide Icons. Features an intuitive "Send" and "Receive" flow with QR code integration.
+- **Receipt Generation**: Users can instantly download professional, image-based transaction receipts upon successfully sending USDC (powered by `html2canvas`).
+- **Activity Tracking**: Real-time transaction history fetching to show incoming and outgoing transfers with explorer links.
 
 ## 🛠️ Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS + Custom CSS Modules (Monospace aesthetics)
-- **Blockchain SDK**: `@solana/web3.js` & `@solana/spl-token`
-- **Utilities**: `qrcode.react`, `bs58`
 
-## 📦 Getting Started
+- **Frontend Framework**: Next.js (App Router), React
+- **Styling**: Tailwind CSS, Lucide React (Icons)
+- **Blockchain**: `@solana/web3.js`, `@solana/spl-token` (Solana Devnet)
+- **Database/Backend (Prepared)**: MongoDB via Mongoose (Ready for backend user/contact management scaling)
+- **Utilities**: `bs58`, `qrcode.react`, `html2canvas`
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+## 🚀 Getting Started
 
-### 2. Run the Development Server
-```bash
-npm run dev
-```
+### Prerequisites
 
-### 3. Open the App
-Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+- Node.js (v18+)
+- npm or yarn
 
-## 📁 Repository Structure
-- `app/page.jsx`: The main user interface, including the Receive/Send forms.
-- `hooks/useWallet.js`: Custom React hook that connects components to the blockchain and manages state.
-- `lib/solana.js`: The core blockchain layer handling RPC network connections, SPL Token interactions, and transaction signatures.
-- `lib/wallet.js`: Manages cryptographic keypair generation, local storage, import, and export.
+### Installation
 
-## 🔮 Future Expansion (Hackathon Roadmap)
-- **Gasless Transactions**: Setup a Next.js API Route to act as a Fee Payer, removing the need for users to hold generic SOL.
-- **Solana Blinks**: Create standard endpoints so the wallet can seamlessly interact with specific URLs directly on Social Media (X/Twitter).
-- **Transaction History**: Implement the frontend to parse and render past transactional RPC data.
-- **Mainnet Toggle**: Allow instant switching between Devnet and Mainnet-Beta.
+1. **Clone the repository** (if applicable) or navigate to the project directory:
+   ```bash
+   cd Merced-Hack-XI-
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up Environment Variables**:
+   Create a `.env.local` file in the root directory and define the following variables:
+   ```env
+   # MongoDB Connection String (For existing or future backend features)
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.../solshield
+   ```
+
+4. **Run the Development Server**:
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the Application**:
+   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📁 Project Architecture
+
+- `/app`: Next.js App Router pages and API routes. The primary UI is in `page.jsx`.
+- `/lib`: Core utility functions holding the business logic.
+  - `solana.js`: Handles communication with the Solana blockchain (RPC connection, checking balances, confirming transactions, transferring SPL tokens).
+  - `wallet.js`: Manages cryptographic keypair creation, base58 encoding, and local browser storage.
+  - `mongodb.js`: Establishes the Mongoose connection singleton for the Next.js backend.
+- `/hooks`: Custom React Hooks.
+  - `useWallet.js`: Serves as the crucial bridge between the static `/lib` functions and the React UI. It manages blockchain state, loading indicators, and exposes clean functions to the UI layer.
+
+## 🔒 Security Note
+
+*Disclaimer: SolShield is currently built as a Hackathon prototype / Proof of Concept.*  
+Private keys currently reside in browser `localStorage` in raw or base58 formats. While highly accessible, this is not recommended for Maineet financial applications holding significant value without password-encryption or Wallet Adapter integration (e.g., Phantom/Backpack).
+
+## 💡 Future Roadmap
+- Mainnet integration toggle
+- Implementation of password-encrypted local storage for the Keypair
+- Address book/favorites saved directly via the MongoDB backend
+- Solana Blinks / Actions integration

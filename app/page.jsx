@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import html2canvas from "html2canvas";
 import { useWallet } from "@/hooks/useWallet";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { ArrowUp, ArrowDown, HelpCircle, ShieldCheck, X, Copy, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -20,12 +21,20 @@ export default function MinimalDashboard() {
     refreshBalances
   } = useWallet();
 
-  const [activeModal, setActiveModal] = useState(null); // 'send', 'receive', null
+  const { isLoaded, isSignedIn, user } = useUser();
+
+  const [activeModal, setActiveModal] = useState(null); // 'send', 'receive', 'welcome', null
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [txSig, setTxSig] = useState(null);
   const [sendError, setSendError] = useState(null);
   const [sendStep, setSendStep] = useState('input'); // 'input', 'scanning', 'confirm'
+
+  // Cloud Wallet State
+  const [pin, setPin] = useState("");
+  const [setupError, setSetupError] = useState(null);
+  const [settingUp, setSettingUp] = useState(false);
+  const [isCheckingWallet, setIsCheckingWallet] = useState(true);
 
   // Mock Favorite Contacts logic
   const favoriteContacts = []; // Empty for demo purposes so it always shows warning
@@ -88,6 +97,89 @@ export default function MinimalDashboard() {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }
 
+  // Check for Cloud Wallet on Load
+  useEffect(() => {
+    async function checkWallet() {
+      if (!isLoaded || !isSignedIn || !user) return;
+
+      try {
+        const res = await fetch(`/api/wallet?clerkId=${user.id}`);
+        if (res.status === 404) {
+          // User doesn't exist in DB, trigger setup modal
+          setActiveModal('welcome');
+          setIsCheckingWallet(false);
+          return;
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          // Wallet exists in DB. If they don't have it locally (e.g. new device), we need to import it.
+          // For now, if the hook hasn't loaded a local address, they need to enter pin to decrypt (Not implemented in this exact step yet, but prevents showing welcome modal)
+          setIsCheckingWallet(false);
+        }
+      } catch (err) {
+        console.error("Failed to check wallet:", err);
+        setIsCheckingWallet(false);
+      }
+    }
+
+    checkWallet();
+  }, [isLoaded, isSignedIn, user]);
+
+  // Handle Cloud Wallet Setup
+  async function handleCloudWalletSetup(e) {
+    e.preventDefault();
+    setSetupError(null);
+
+    if (!user) return setSetupError("Must be logged in.");
+
+    // Basic validation
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) return setSetupError("PIN must be exactly 6 digits.");
+
+    setSettingUp(true);
+
+    try {
+      // 1. Generate and encrypt new wallet using the util we just made
+      const { generateAndEncryptWallet, saveWallet } = await import('@/lib/wallet');
+      const { address: newAddress, encryptedPrivateKey, keypair } = generateAndEncryptWallet(pin);
+
+      // 2. Send to backend
+      const res = await fetch('/api/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clerkId: user.id,
+          walletAddress: newAddress,
+          encryptedPrivateKey
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create cloud wallet");
+      }
+
+      // 3. Save to local storage for current session
+      saveWallet(keypair);
+
+      // 4. Force a reload so useWallet hook picks up the new Keypair
+      window.location.reload();
+
+    } catch (error) {
+      setSetupError(error.message);
+      setSettingUp(false);
+    }
+  }
+
+  if (!isLoaded || isCheckingWallet) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans p-4 md:p-8 relative">
       <div className="max-w-md mx-auto space-y-6">
@@ -98,14 +190,12 @@ export default function MinimalDashboard() {
             <h1 className="text-xl font-semibold text-gray-900">SolShield</h1>
             <p className="text-sm text-gray-500">Secure Savings</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={refreshBalances} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-              <RefreshCw size={18} className={loading && address ? "animate-spin" : ""} />
-            </button>
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
               <ShieldCheck size={16} />
               <span>Protected</span>
             </div>
+            <UserButton afterSignOutUrl="/sign-in" />
           </div>
         </header>
 
@@ -124,14 +214,14 @@ export default function MinimalDashboard() {
         <section className="grid grid-cols-2 gap-4">
           <button
             onClick={() => setActiveModal('receive')}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-semibold transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:shadow-sm"
           >
             <ArrowDown size={20} />
             Receive
           </button>
           <button
             onClick={() => setActiveModal('send')}
-            className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 p-4 rounded-2xl font-semibold transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:bg-gray-100"
           >
             <ArrowUp size={20} />
             Send
@@ -181,6 +271,53 @@ export default function MinimalDashboard() {
       </div>
 
       {/* Modals overlay */}
+      {activeModal === 'welcome' && !address && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <ShieldCheck size={32} />
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900">Welcome, {user?.firstName}!</h2>
+              <p className="text-gray-500 mt-2">Create your secure cloud wallet in seconds. No seed phrases required.</p>
+            </div>
+
+            <form onSubmit={handleCloudWalletSetup} className="space-y-5">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5 ml-1">Secure PIN</label>
+                <input
+                  type="password"
+                  placeholder="••••••"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium tracking-widest text-center text-xl"
+                  required
+                  disabled={settingUp}
+                />
+                <p className="text-xs text-gray-500 mt-2 ml-1">Create a 6-digit PIN to encrypt your wallet.</p>
+              </div>
+
+              {setupError && (
+                <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-sm border border-red-100 flex gap-2 items-start font-medium">
+                  <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                  {setupError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={settingUp || pin.length !== 6}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-4 flex items-center justify-center gap-2"
+              >
+                {settingUp && <Loader2 size={18} className="animate-spin" />}
+                {settingUp ? "Securing Wallet..." : "Create Secure Wallet"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {activeModal === 'receive' && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-in slide-in-from-bottom-5">
@@ -322,13 +459,13 @@ export default function MinimalDashboard() {
                 )}
 
                 <div className="flex gap-3">
-                  <button onClick={() => setSendStep('input')} className="flex-[0.4] bg-gray-100 text-gray-700 font-semibold py-4 rounded-xl hover:bg-gray-200 transition-colors">
+                  <button onClick={() => setSendStep('input')} className="flex-[0.4] bg-gray-100 text-gray-700 font-semibold py-4 rounded-xl hover:bg-gray-200 active:scale-95 transition-all duration-200">
                     Back
                   </button>
                   <button
                     onClick={handleSend}
                     disabled={sending}
-                    className={`flex-1 font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all ${sending ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'}`}
+                    className={`flex-1 font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 ${sending ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg active:scale-95 text-white shadow-md'}`}
                   >
                     {sending && <Loader2 size={18} className="animate-spin" />}
                     {sending ? 'Sending...' : 'Confirm & Send'}
@@ -377,7 +514,7 @@ export default function MinimalDashboard() {
                 <button
                   onClick={initiateSecurityScan}
                   disabled={!canSend}
-                  className={`w-full font-semibold py-4 rounded-xl flex items-center justify-center gap-2 mt-4 transition-all ${canSend ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  className={`w-full font-semibold py-4 rounded-xl flex items-center justify-center gap-2 mt-4 transition-all duration-200 ${canSend ? 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-1 hover:shadow-lg active:scale-95 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                 >
                   Review Send
                 </button>
