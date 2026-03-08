@@ -20,7 +20,7 @@ export async function GET(request) {
   const user = await User.findOneAndUpdate(
     { address },
     { $setOnInsert: { address } },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   return NextResponse.json(user);
@@ -39,7 +39,7 @@ export async function POST(request) {
   const user = await User.findOneAndUpdate(
     { address },
     { $set: updates },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   return NextResponse.json(user);
