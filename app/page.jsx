@@ -8,7 +8,6 @@ import { ArrowUp, ArrowDown, HelpCircle, ShieldCheck, X, Copy, ExternalLink, Ref
 import { QRCodeSVG } from "qrcode.react";
 import ChatBox from "@/app/components/ChatBox";
 import LanguageSelector from "@/app/components/LanguageSelector";
-import DepositModal from "@/app/components/DepositModal";
 import { useTranslation } from "@/app/contexts/TranslationContext";
 
 export default function MinimalDashboard() {
@@ -233,7 +232,7 @@ export default function MinimalDashboard() {
         </section>
 
         {/* Action Buttons */}
-        <section className="grid grid-cols-3 gap-3">
+        <section className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setActiveModal('receive')}
             className="flex flex-col items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:shadow-sm"
@@ -247,13 +246,6 @@ export default function MinimalDashboard() {
           >
             <ArrowUp size={20} />
             <span className="text-sm">{t("send")}</span>
-          </button>
-          <button
-            onClick={() => setActiveModal('deposit')}
-            className="flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>
-            <span className="text-sm">{t("deposit")}</span>
           </button>
         </section>
 
@@ -298,19 +290,6 @@ export default function MinimalDashboard() {
           )}
         </section>
       </div>
-
-      {/* ── Deposit Modal ── */}
-      {activeModal === 'deposit' && (
-        <DepositModal
-          address={address}
-          solBalance={solBalance}
-          onClose={() => setActiveModal(null)}
-          onAirdrop={async () => {
-            await airdropSOL();
-            setActiveModal(null);
-          }}
-        />
-      )}
 
       {/* ── Welcome / Wallet Setup Modal ── */}
       {activeModal === 'welcome' && (
