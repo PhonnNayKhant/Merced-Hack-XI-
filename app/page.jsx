@@ -3,12 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import html2canvas from "html2canvas";
 import { useWallet } from "@/hooks/useWallet";
-import { ArrowUp, ArrowDown, HelpCircle, ShieldCheck, X, Copy, ExternalLink, RefreshCw } from "lucide-react";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { ArrowUp, ArrowDown, HelpCircle, ShieldCheck, X, Copy, ExternalLink, RefreshCw, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import ChatBox from "@/app/components/ChatBox";
 import LanguageSelector from "@/app/components/LanguageSelector";
+import { useTranslation } from "@/app/contexts/TranslationContext";
 
 export default function MinimalDashboard() {
+  const { t } = useTranslation();
   const {
     address,
     usdcBalance,
@@ -21,6 +24,8 @@ export default function MinimalDashboard() {
     error,
     refreshBalances
   } = useWallet();
+
+  const { isLoaded, isSignedIn, user } = useUser();
 
   const [activeModal, setActiveModal] = useState(null); // 'send', 'receive', null
   const [recipient, setRecipient] = useState("");

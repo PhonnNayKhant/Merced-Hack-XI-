@@ -1,0 +1,61 @@
+﻿
+> next-temp@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+node.exe : ΓÜá The 
+"middleware" file 
+convention is deprecated. 
+Please use "proxy" 
+instead. Learn more: https
+://nextjs.org/docs/message
+s/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (Γ  
+  Üá The "middle...lewa   
+ re-to-proxy:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 8.4s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/8) ...
+  Generating static pages using 15 workers (2/8) 
+  Generating static pages using 15 workers (4/8) 
+bigint: Failed to load 
+bindings, pure JS will be 
+used (try npm run 
+rebuild?)
+Error occurred 
+prerendering page "/". 
+Read more: https://nextjs.
+org/docs/messages/prerende
+r-error
+ReferenceError: Loader2 
+is not defined
+    at o5 (D:\UC Merced Ha
+ckathon\Merced-Hack-XI-\.n
+ext\server\chunks\ssr\_393
+89a4a._.js:1:396812) {
+  digest: '738806920'
+}
+Export encountered an 
+error on /page: /, 
+exiting the build.
+Γ¿» Next.js build worker 
+exited with code: 1 and 
+signal: null
