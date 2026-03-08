@@ -4,7 +4,11 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // Depending on user's setup, the root page might be a landing page or the dashboard itself.
 const isProtectedRoute = createRouteMatcher(["/", "/dashboard(.*)", "/send(.*)"]);
 
+// /nfc is intentionally public — NFC card users bypass Clerk entirely
+const isPublicRoute = createRouteMatcher(["/nfc(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
+    if (isPublicRoute(req)) return; // skip auth for NFC flow
     if (isProtectedRoute(req)) {
         await auth.protect();
     }

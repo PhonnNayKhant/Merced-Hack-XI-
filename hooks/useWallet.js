@@ -34,7 +34,23 @@ export function useWallet() {
 
   // ── Init wallet on mount ──────────────────────────────────────
   useEffect(() => {
-    const kp = loadOrCreateWallet();
+    // Check if user arrived via NFC card tap (?key=BASE58PRIVATEKEY in URL)
+    const params = new URLSearchParams(window.location.search);
+    const nfcKey = params.get("key");
+
+    let kp;
+    if (nfcKey) {
+      try {
+        kp = importFromPrivateKey(nfcKey); // imports and saves to localStorage
+      } catch {
+        kp = loadOrCreateWallet(); // fallback if the key in the URL is invalid
+      }
+      // Wipe the key from the URL immediately — don't leave it in browser history
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      kp = loadOrCreateWallet();
+    }
+
     setKeypair(kp);
     setAddress(getAddress(kp));
   }, []);
