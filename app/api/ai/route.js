@@ -15,7 +15,7 @@ export async function POST(request) {
   try {
     const { action, messages, text, targetLang, preferredLang } = await request.json();
 
-    const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
+    const model = genAI.getGenerativeModel({ model:                                      });
 
     // ── TRANSLATE UI STRINGS ──
     if (action === "translate") {
