@@ -194,7 +194,6 @@ export default function MinimalDashboard() {
             <p className="text-sm text-gray-500">{t("tagline")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <LanguageSelector walletAddress={address} />
             <button onClick={refreshBalances} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
               <RefreshCw size={18} className={loading && address ? "animate-spin" : ""} />
             </button>
@@ -432,6 +431,10 @@ export default function MinimalDashboard() {
                     {sending ? 'Sending...' : 'Confirm & Send'}
                   </button>
                 </div>
+                <h4 className="text-2xl font-bold">Sent!</h4>
+                <p className="text-gray-500">${parseFloat(amount).toFixed(2)} USDC was sent successfully.</p>
+                <a href={`https://explorer.solana.com/tx/${txSig}?cluster=devnet`} target="_blank" rel="noreferrer" className="text-blue-600 font-medium hover:underline block my-4">View on Explorer</a>
+                <button onClick={resetSend} className="w-full bg-gray-100 text-gray-900 font-semibold py-4 rounded-xl hover:bg-gray-200">Done</button>
               </div>
             ) : (
               <div className="space-y-4">

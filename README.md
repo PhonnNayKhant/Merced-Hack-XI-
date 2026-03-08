@@ -1,4 +1,4 @@
-# 🛡️ SolShield 
+# 🛡️ SolShield
 
 **SolShield** is a minimalistic, non-custodial **Solana Web Wallet** built for the UC Merced Hackathon. It is extremely focused on handling **USDC transactions** flawlessly on the Solana Devnet.
 
