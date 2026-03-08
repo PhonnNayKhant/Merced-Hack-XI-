@@ -1,0 +1,75 @@
+﻿Connecting to MongoDB...
+node : MongoAPIError: 
+URI option "appName" 
+cannot be specified 
+with no value
+At line:1 char:1
++ node test_db.mjs > 
+test_db.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : 
+NotSpecified: (M    
+ongoAPIError: ...d wi 
+   th no 
+value:String) [    ], 
+RemoteException
+    + 
+FullyQualifiedError   
+ Id : 
+NativeCommandErr    or
+ 
+    at parseOptions 
+(D:\UC Merced Hackatho
+n\Merced-Hack-XI-\node
+_modules\mongodb\lib\c
+onnection_string.js:22
+4:19)
+    at new 
+MongoClient (D:\UC 
+Merced Hackathon\Merce
+d-Hack-XI-\node_module
+s\mongodb\lib\mongo_cl
+ient.js:67:61)
+    at NativeConnectio
+n.createClient (D:\UC 
+Merced Hackathon\Merce
+d-Hack-XI-\node_module
+s\mongoose\lib\drivers
+\node-mongodb-native\c
+onnection.js:334:14)
+    at NativeConnectio
+n.openUri (D:\UC 
+Merced Hackathon\Merce
+d-Hack-XI-\node_module
+s\mongoose\lib\connect
+ion.js:1075:34)
+    at 
+Mongoose.connect 
+(D:\UC Merced Hackatho
+n\Merced-Hack-XI-\node
+_modules\mongoose\lib\
+mongoose.js:471:15)
+    at checkDB (file:/
+//D:/UC%20Merced%20Hac
+kathon/Merced-Hack-XI-
+/test_db.mjs:10:20)
+    at file:///D:/UC%2
+0Merced%20Hackathon/Me
+rced-Hack-XI-/test_db.
+mjs:32:1
+    at ModuleJob.run (
+node:internal/modules/
+esm/module_job:345:25)
+    at async onImport.
+tracePromise.__proto__
+ (node:internal/module
+s/esm/loader:651:26)
+    at async asyncRunE
+ntryPointWithESMLoader
+ (node:internal/module
+s/run_main:117:5) {
+  errorLabelSet: 
+Set(0) {}
+}

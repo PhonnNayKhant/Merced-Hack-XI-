@@ -8,6 +8,7 @@ import { ArrowUp, ArrowDown, HelpCircle, ShieldCheck, X, Copy, ExternalLink, Ref
 import { QRCodeSVG } from "qrcode.react";
 import ChatBox from "@/app/components/ChatBox";
 import LanguageSelector from "@/app/components/LanguageSelector";
+import DepositModal from "@/app/components/DepositModal";
 import { useTranslation } from "@/app/contexts/TranslationContext";
 
 export default function MinimalDashboard() {
@@ -22,7 +23,8 @@ export default function MinimalDashboard() {
     sendUSDC,
     isValidAddress,
     error,
-    refreshBalances
+    refreshBalances,
+    airdropSOL,
   } = useWallet();
 
   const { isLoaded, isSignedIn, user } = useUser();
@@ -146,7 +148,7 @@ export default function MinimalDashboard() {
       const { generateAndEncryptWallet, saveWallet } = await import('@/lib/wallet');
       const { address: newAddress, encryptedPrivateKey, keypair } = generateAndEncryptWallet(pin);
 
-      // 2. Send to backend
+      // 2. Send to backend (stores encrypted key)
       const res = await fetch('/api/wallet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,10 +165,23 @@ export default function MinimalDashboard() {
         throw new Error(data.error || "Failed to create cloud wallet");
       }
 
-      // 3. Save to local storage for current session
+      // 3. Sync clerkId + walletAddress to MongoDB User collection
+      const syncRes = await fetch('/api/user/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: newAddress })
+      });
+
+      if (syncRes.ok) {
+        console.log('Successfully synced to MongoDB!');
+      } else {
+        console.warn('MongoDB sync returned non-OK status:', syncRes.status);
+      }
+
+      // 4. Save to local storage for current session
       saveWallet(keypair);
 
-      // 4. Force a reload so useWallet hook picks up the new Keypair
+      // 5. Force a reload so useWallet hook picks up the new Keypair
       window.location.reload();
 
     } catch (error) {
@@ -217,20 +232,27 @@ export default function MinimalDashboard() {
         </section>
 
         {/* Action Buttons */}
-        <section className="grid grid-cols-2 gap-4">
+        <section className="grid grid-cols-3 gap-3">
           <button
             onClick={() => setActiveModal('receive')}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:shadow-sm"
           >
             <ArrowDown size={20} />
-            {t("receive")}
+            <span className="text-sm">{t("receive")}</span>
           </button>
           <button
             onClick={() => setActiveModal('send')}
-            className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:bg-gray-100"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95 active:bg-gray-100"
           >
             <ArrowUp size={20} />
-            {t("send")}
+            <span className="text-sm">{t("send")}</span>
+          </button>
+          <button
+            onClick={() => setActiveModal('deposit')}
+            className="flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white p-4 rounded-2xl font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-95"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>
+            <span className="text-sm">{t("deposit")}</span>
           </button>
         </section>
 
@@ -275,6 +297,77 @@ export default function MinimalDashboard() {
           )}
         </section>
       </div>
+
+      {/* ── Deposit Modal ── */}
+      {activeModal === 'deposit' && (
+        <DepositModal
+          address={address}
+          solBalance={solBalance}
+          onClose={() => setActiveModal(null)}
+          onAirdrop={async () => {
+            await airdropSOL();
+            setActiveModal(null);
+          }}
+        />
+      )}
+
+      {/* ── Welcome / Wallet Setup Modal ── */}
+      {activeModal === 'welcome' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 shadow-xl">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-3">
+                <div className="bg-blue-100 text-blue-600 p-4 rounded-full">
+                  <ShieldCheck size={32} />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Welcome to SolShield</h3>
+              <p className="text-gray-500 text-sm mt-2 max-w-[280px] mx-auto">
+                Create a 6-digit PIN to secure your new Solana wallet. Keep it safe — you'll need it to send funds.
+              </p>
+            </div>
+
+            <form onSubmit={handleCloudWalletSetup} className="space-y-5">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">6-Digit Security PIN</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="••••••"
+                  className="w-full border border-gray-200 bg-gray-50 rounded-xl p-4 text-center text-2xl tracking-[0.5em] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900"
+                />
+              </div>
+
+              {setupError && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm border border-red-100 font-medium">
+                  {setupError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={settingUp || pin.length !== 6}
+                className={`w-full font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 ${settingUp || pin.length !== 6
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 text-white shadow-md'
+                  }`}
+              >
+                {settingUp ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Creating Wallet...
+                  </>
+                ) : (
+                  'Create My Wallet'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modals overlay */}
       {activeModal === 'receive' && (
@@ -462,7 +555,7 @@ export default function MinimalDashboard() {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full border border-gray-200 bg-gray-50 rounded-xl p-4 pl-8 font-semibold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900"
+                      className="w-full border border-gray-200 bg-gray-50 rounded-xl p-4 pl-8 pr-16 font-semibold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button onClick={() => setAmount(String(usdcBalance))} className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold text-sm hover:text-blue-800">{t("max")}</button>
                   </div>

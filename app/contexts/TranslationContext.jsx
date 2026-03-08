@@ -37,6 +37,16 @@ export const DEFAULT_STRINGS = {
   poweredBy: "Powered by Gemini AI",
   // Language selector
   translating: "Translating...",
+  // Deposit modal
+  deposit: "Deposit",
+  depositTitle: "Fund Your Wallet",
+  depositSubtitle: "Share your address or scan the QR code to receive assets.",
+  devnetNotice: "This address accepts Solana Devnet assets only. Do not send real funds to this address.",
+  requestDevnetSOL: "Request Devnet SOL",
+  airdropProcessing: "Requesting airdrop...",
+  airdropSuccess: "Deposit Confirmed! SOL airdropped successfully.",
+  airdropError: "Airdrop failed. Try faucet.solana.com instead.",
+  copied: "Copied!",
 };
 
 // Optional built-in translations so the UI works
@@ -315,7 +325,7 @@ export function TranslationProvider({ children }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address: walletAddress, language: "en" }),
-        }).catch(() => {});
+        }).catch(() => { });
       }
       return;
     }
@@ -331,7 +341,7 @@ export function TranslationProvider({ children }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address: walletAddress, language: langCode }),
-        }).catch(() => {});
+        }).catch(() => { });
       }
       return;
     }
@@ -358,7 +368,7 @@ export function TranslationProvider({ children }) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ address: walletAddress, language: langCode }),
-          }).catch(() => {});
+          }).catch(() => { });
         }
       }
     } catch (err) {
